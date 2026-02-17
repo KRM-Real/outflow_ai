@@ -1,0 +1,305 @@
+# Outflow AI — Phase 1
+
+## Execution Core MVP
+
+**Duration:** 6 Weeks
+**Objective:** Build a production-ready, persistent, async execution engine for visual workflows.
+
+---
+
+# Phase 1 Outcome
+
+By the end of Phase 1:
+
+* Pipelines persist in PostgreSQL
+* Pipelines execute deterministically
+* Execution runs are stored and queryable
+* Runtime logic is modular (registry-based)
+* Execution engine is fully async-ready
+* Validation layer is structured and extensible
+* Frontend supports execution inspection
+
+This phase builds the core infrastructure for future AI-agent orchestration.
+
+---
+
+# 1. Pipeline Persistence Layer
+
+## Goals
+
+* Store pipelines in PostgreSQL
+* Enable CRUD operations
+* Allow frontend to load/save pipelines
+
+## 🗄 Database: pipelines
+
+| Field      | Type      |
+| ---------- | --------- |
+| id         | UUID (PK) |
+| name       | VARCHAR   |
+| nodes      | JSONB     |
+| edges      | JSONB     |
+| created_at | TIMESTAMP |
+| updated_at | TIMESTAMP |
+
+## 🔌 Required Endpoints
+
+* [ ] POST `/pipelines`
+* [ ] GET `/pipelines`
+* [ ] GET `/pipelines/{id}`
+* [ ] PUT `/pipelines/{id}`
+* [ ] DELETE `/pipelines/{id}`
+
+## Acceptance Criteria
+
+* [ ] Pipelines survive server restarts
+* [ ] Frontend can load saved pipelines
+* [ ] Pipelines can be renamed and updated
+
+---
+
+# 2. Execution Engine Refactor
+
+## Goals
+
+Replace monolithic execution logic with a layered architecture.
+
+## Required Architecture
+
+```
+Execution Service
+    ├── Graph Validator
+    ├── Topological Resolver
+    ├── Runtime Registry
+    ├── Execution Context
+    └── Result Aggregator
+```
+
+## ExecutionContext
+
+* [ ] run_id
+* [ ] pipeline_id
+* [ ] node_results (dict)
+* [ ] logs (list)
+* [ ] status (running/success/failure)
+
+## Runtime Registry Pattern
+
+* [ ] Implement NODE_REGISTRY mapping
+* [ ] Create BaseRuntime interface
+* [ ] Implement runtime classes per node type
+* [ ] Remove large if/else execution blocks
+
+### Runtime Interface
+
+```python
+class BaseRuntime:
+    async def execute(self, node, inputs, context):
+        pass
+```
+
+## Acceptance Criteria
+
+* [ ] Adding a new node type requires only a new runtime class
+* [ ] Execution engine has no monolithic branching
+* [ ] Clear separation of concerns
+
+---
+
+# 3. Async Execution Conversion
+
+## Goals
+
+Make execution engine async-ready.
+
+## Required
+
+* [ ] Convert FastAPI endpoints to async
+* [ ] Make runtime execute() async
+* [ ] Ensure non-blocking I/O
+* [ ] Support awaited LLM/API calls (mocked initially)
+
+## Acceptance Criteria
+
+* [ ] No blocking operations in execution path
+* [ ] Ready for real LLM integrations
+
+---
+
+# 4. Execution Logging & Observability
+
+## Goals
+
+Provide structured execution results per node.
+
+## Execution Result Schema
+
+```json
+{
+  "run_id": "uuid",
+  "status": "success",
+  "node_results": {
+    "node-1": {
+      "status": "success",
+      "duration_ms": 12,
+      "output": {}
+    }
+  }
+}
+```
+
+## Required Per Node
+
+* [ ] start_time
+* [ ] end_time
+* [ ] duration_ms
+* [ ] status
+* [ ] output
+* [ ] error (if exists)
+
+## Acceptance Criteria
+
+* [ ] Failed nodes return structured errors
+* [ ] Execution does not crash entire pipeline
+* [ ] Logs are accessible for debugging
+
+---
+
+# 5. Execution Run History
+
+## Database: execution_runs
+
+| Field       | Type      |
+| ----------- | --------- |
+| id          | UUID (PK) |
+| pipeline_id | UUID (FK) |
+| status      | VARCHAR   |
+| results     | JSONB     |
+| started_at  | TIMESTAMP |
+| finished_at | TIMESTAMP |
+
+## Required Endpoints
+
+* [ ] POST `/pipelines/{id}/execute`
+* [ ] GET `/pipelines/{id}/runs`
+* [ ] GET `/runs/{run_id}`
+
+## Acceptance Criteria
+
+* [ ] Every execution creates a stored run
+* [ ] Runs can be queried later
+* [ ] Results are replayable
+
+---
+
+# 6. Graph Validation Layer
+
+## Goals
+
+Expand validation beyond DAG detection.
+
+## Required Validations
+
+* [ ] Cycle detection
+* [ ] Orphan node detection
+* [ ] Required input enforcement
+* [ ] Type compatibility validation
+* [ ] Multiple root validation
+
+## Acceptance Criteria
+
+* [ ] Invalid pipelines cannot execute
+* [ ] Error messages are descriptive
+* [ ] Validation errors returned as structured responses
+
+---
+
+# 7. Frontend Execution Inspector
+
+## Goals
+
+Replace alert-based execution feedback with visual inspector.
+
+## 🛠 Required UI Features
+
+* [ ] Execution order display
+* [ ] Per-node output viewer
+* [ ] Node duration display
+* [ ] Error highlighting in graph
+* [ ] Failed node visual indicators
+
+## Acceptance Criteria
+
+* [ ] Users can inspect intermediate outputs
+* [ ] Errors are clearly visible
+* [ ] Execution feels interactive and debuggable
+
+---
+
+# Explicitly Out of Scope (Phase 1)
+
+* [ ] Authentication
+* [ ] Multi-tenant architecture
+* [ ] Role-based access control
+* [ ] Distributed execution workers
+* [ ] Agent memory
+* [ ] Retry policies
+* [ ] Scheduling
+* [ ] Marketplace
+* [ ] SaaS billing
+* [ ] Collaboration features
+
+---
+
+# 6-Week Timeline
+
+## Week 1
+
+* [ ] PostgreSQL setup
+* [ ] Pipeline model
+* [ ] CRUD endpoints
+* [ ] Frontend integration
+
+## Week 2
+
+* [ ] Execution service refactor
+* [ ] Runtime registry
+* [ ] ExecutionContext
+
+## Week 3
+
+* [ ] Async conversion
+* [ ] Runtime abstraction completion
+* [ ] Structured logging
+
+## Week 4
+
+* [ ] ExecutionRun model
+* [ ] Run persistence
+* [ ] Run history endpoints
+
+## Week 5
+
+* [ ] Graph validation expansion
+* [ ] Type validation system
+
+## Week 6
+
+* [ ] Frontend execution inspector
+* [ ] Node highlighting
+* [ ] End-to-end testing
+* [ ] Codebase refactor & cleanup
+
+---
+
+# Definition of Done
+
+Phase 1 is complete when:
+
+* [ ] Pipelines persist
+* [ ] Execution is async
+* [ ] Runtime registry exists
+* [ ] Runs are stored
+* [ ] Validation layer is structured
+* [ ] Execution logs are inspectable
+* [ ] Architecture is modular and scalable
