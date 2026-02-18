@@ -1,0 +1,1 @@
+# NodeRegistry: type -> handler

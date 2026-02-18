@@ -1,0 +1,1 @@
+# graph validation (dangling edges, bad handles, etc.)
